@@ -436,7 +436,7 @@
     (error "No symbol given"))
   (let ((symbol-info (slime-eval `(swank-help:read-emacs-symbol-info (cl:read-from-string ,(slime-qualify-cl-symbol-name symbol-name)) :function))))
     (when (null symbol-info)
-      (error "Could not read symbol informartion: %s" symbol-name))
+      (error "Could not read symbol information: %s" symbol-name))
     (slime-help--funcallable symbol-name symbol-info :function)))
 
 (defun slime-help-macro (symbol-name)
@@ -501,19 +501,20 @@
     (let* ((package-name (cdr (assoc :package symbol-info)))
            (buffer (get-buffer-create buffer-name)))
       (with-current-buffer buffer
-        (insert (slime-help--heading-1 (cdr (assoc :name symbol-info))))
-        (newline 2)
-        (insert (format "This is a %s in package " function-type-name))
-        (insert-button package-name
+        (insert (format "%s is a %s defined in " (downcase (cdr (assoc :name symbol-info))) function-type-name))
+        (insert-button (downcase package-name)
                        'action (lambda (btn)
-				 (ignore btn)
+				                 (ignore btn)
                                  (slime-help-package package-name))
                        'follow-link t
                        'help-echo "Describe package")
+        (insert ".")
         (newline 2)
         (insert (slime-help--heading-3 "Signature"))
         (newline)
-        (insert (slime-help--highlight-syntax (cdr (assoc :args symbol-info))))
+        (insert (slime-help--highlight-syntax (format "(%s %s)" (downcase (cdr (assoc :name symbol-info)))
+                                                      (substring (cdr (assoc :args symbol-info))
+                                                                 1 -1))))
         (newline 2)
 
         (when (cdr (assoc :documentation symbol-info))
@@ -521,8 +522,8 @@
           (newline 2))
 
         (cl-flet ((goto-source (btn)
-			       (ignore btn)
-                               (slime-edit-definition-other-window (prin1-to-string (cdr (assoc :symbol symbol-info))))))
+			        (ignore btn)
+                    (slime-edit-definition-other-window (prin1-to-string (cdr (assoc :symbol symbol-info))))))
           (insert-button "Source"
                          'action (function goto-source)
                          'face 'slime-help-button
@@ -531,7 +532,7 @@
         (insert " ")
 
         (cl-flet ((browse-references (btn)
-                                     (slime-who-calls (prin1-to-string (cdr (assoc :symbol symbol-info))))))
+                    (slime-who-calls (prin1-to-string (cdr (assoc :symbol symbol-info))))))
           (insert-button "References"
                          'action (function browse-references)
                          'face 'slime-help-button
@@ -540,7 +541,7 @@
         (insert " ")
 
         (cl-flet ((disassemble-function (btn)
-                                        (slime-disassemble-symbol (prin1-to-string (cdr (assoc :symbol symbol-info))))))
+                    (slime-disassemble-symbol (prin1-to-string (cdr (assoc :symbol symbol-info))))))
           (insert-button "Disassemble"
                          'action (function disassemble-function)
                          'face 'slime-help-button
@@ -559,9 +560,9 @@
         (when (cl-member (cdr (assoc :package symbol-info))
                          '("COMMON-LISP" "CL") :test 'equalp)
           (cl-flet ((lookup-in-hyperspec (btn)
-					 (ignore btn)
-                                         (slime-hyperspec-lookup
-                                          (prin1-to-string (cdr (assoc :symbol symbol-info))))))
+					  (ignore btn)
+                      (slime-hyperspec-lookup
+                       (prin1-to-string (cdr (assoc :symbol symbol-info))))))
             (insert-button "Lookup in Hyperspec"
                            'face 'slime-help-button
                            'action (function lookup-in-hyperspec)
@@ -743,7 +744,7 @@
                            'action (function lookup-in-hyperspec)
                            'follow-link t
                            'help-echo "Lookup variable in Hyperspec")))
-	
+
         (newline 2)
 
         (insert (slime-help--heading-2 "Direct superclasses"))
@@ -873,7 +874,7 @@
         ;; buttons
 
         (cl-flet ((browse-system (btn)
-                                 (slime-browse-system system-name)))
+                    (slime-browse-system system-name)))
           (insert-button "Browse"
                          'action (function browse-system)
                          'follow-link t
@@ -883,8 +884,8 @@
 
         (when (not (cdr (assoc :loaded-p system-info)))
           (cl-flet ((load-system (btn)
-				 (ignore btn)
-                                 (slime-load-system system-name)))
+				      (ignore btn)
+                      (slime-load-system system-name)))
             (insert-button "Load"
                            'action (function load-system)
                            'follow-link t
@@ -901,7 +902,7 @@
             (insert "* ")
             (insert-button dependency
                            'action (lambda (btn)
-				     (ignore btn)
+				                     (ignore btn)
                                      (slime-help-system dependency))
                            'follow-link t
                            'help-echo "Describe system")
@@ -915,7 +916,7 @@
           (dolist (package-name (cdr (assoc :packages system-info)))
             (insert-button package-name
                            'action (lambda (btn)
-				     (ignore btn)
+				                     (ignore btn)
                                      (slime-help-package package-name))
                            'follow-link t
                            'help-echo "Describe package")

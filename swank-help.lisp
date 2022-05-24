@@ -1,15 +1,32 @@
 (require :def-properties (merge-pathnames #p"cl-def-properties/module.lisp" (uiop/pathname:pathname-directory-pathname *load-pathname*)))
 
 (defpackage :swank-help
-  (:use :cl :def-properties)
+  (:use :cl :serapeum :alexandria)
   (:export
    :read-emacs-symbol-info
    :read-emacs-package-info
    :read-emacs-system-info
    :read-emacs-packages-info
-   :read-emacs-systems-info))
+   :read-emacs-systems-info
+   :all-function-symbols
+   :all-packages))
 
 (in-package :swank-help)
+
+(defun all-function-symbols (package-name)
+  "Retrieves all functions in a PACKAGE."
+  (let ((package (make-keyword (string-upcase package-name))))
+    (when (find-package package)
+      (let ((res (list)))
+        (do-all-symbols (sym package)
+          (when (and (fboundp sym)
+                     (eql (symbol-package sym)
+                          (find-package package)))
+            (push sym res)))
+        res))))
+
+(defun all-packages ()
+  (mapcar (compose #'string-downcase #'package-name) (list-all-packages)))
 
 (defun aget (alist key)
   (cdr (assoc key alist :test 'equalp)))
