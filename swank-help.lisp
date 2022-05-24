@@ -1,9 +1,8 @@
-(require :def-properties (merge-pathnames #p"cl-def-properties/module.lisp" (uiop/pathname:pathname-directory-pathname *load-pathname*)))
+(require :def-properties
+         (pathname "/home/pollock/slime-doc-contribs/cl-def-properties/module.lisp"))
 
 (defpackage :swank-help
-  (:use :cl
-        ;; my stuff
-        :serapeum :alexandria)
+  (:use :cl :alexandria)
   (:export
    :read-emacs-symbol-info
    :read-emacs-package-info
@@ -11,6 +10,7 @@
    :read-emacs-packages-info
    :read-emacs-systems-info
    ;; my stuff
+   :get-docs
    :get-external-functions
    :get-external-variables
    :all-packages))
@@ -18,6 +18,9 @@
 (in-package :swank-help)
 
 ;; my stuff
+
+(defun get-docs (sym)
+  (documentation sym 'function))
 
 (defun get-external-variables (package-name)
   (get-external-symbols #'boundp package-name))

@@ -148,49 +148,6 @@
        (or package (cdr (assoc :package info))))
     (insert (slime-help--propertize-docstring (cdr (assoc :documentation info))))))
 
-;; additions by me
-
-(defvar slime-help-packages-to-search '("serapeum" "alexandria" "common-lisp" "stumpwm"))
-
-(defun slime-help-function-select-from-packages (package-name stripped-function-name)
-  (interactive
-   (let
-       ((package-name
-         (completing-read "Package: "
-                          (slime-eval
-                           `(swank-help:all-packages)))))
-     (list package-name
-           (completing-read "Function: "
-                            (mapcar
-                             (lambda (s)
-                               (string-remove-prefix (format "%s:" package-name)
-                                                     (symbol-name s)))
-                             (remove-duplicates
-                              (slime-eval
-                               `(swank-help:get-external-functions ,package-name))
-                              :test #'equal))))))
-  (slime-help-function
-   (format "%s:%s" package-name stripped-function-name)))
-(defun slime-help-function-select (function-name)
-  (interactive
-   (list (completing-read "Function: "
-                          (remove-duplicates
-                           (cl-loop for package in slime-help-packages-to-search
-                                    append (slime-eval
-                                            `(swank-help:get-external-functions ,package)))
-                           :test #'equal))))
-  (slime-help-function function-name))
-
-(defun slime-help-variable-select (variable-name)
-  (interactive
-   (list (completing-read "Variable: "
-                          (remove-duplicates
-                           (cl-loop for package in slime-help-packages-to-search
-                                    append (slime-eval
-                                            `(swank-help:get-external-variables ,package)))
-                           :test #'equal))))
-  (slime-help-variable variable-name))
-
 ;; copied from helpful.el library
 
 (defun slime-help--button (text type &rest properties)
