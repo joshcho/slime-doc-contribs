@@ -1,32 +1,48 @@
 (require :def-properties (merge-pathnames #p"cl-def-properties/module.lisp" (uiop/pathname:pathname-directory-pathname *load-pathname*)))
 
 (defpackage :swank-help
-  (:use :cl :serapeum :alexandria)
+  (:use :cl
+        ;; my stuff
+        :serapeum :alexandria)
   (:export
    :read-emacs-symbol-info
    :read-emacs-package-info
    :read-emacs-system-info
    :read-emacs-packages-info
    :read-emacs-systems-info
-   :all-function-symbols
+   ;; my stuff
+   :get-external-functions
+   :get-external-variables
    :all-packages))
 
 (in-package :swank-help)
 
-(defun all-function-symbols (package-name)
-  "Retrieves all functions in a PACKAGE."
-  (let ((package (make-keyword (string-upcase package-name))))
-    (when (find-package package)
-      (let ((res (list)))
-        (do-all-symbols (sym package)
-          (when (and (fboundp sym)
-                     (eql (symbol-package sym)
-                          (find-package package)))
-            (push sym res)))
-        res))))
+;; my stuff
+
+(defun get-external-variables (package-name)
+  (get-external-symbols #'boundp package-name))
+
+(defun get-external-functions (package-name)
+  (get-external-symbols #'fboundp package-name))
+
+(defun get-external-symbols (pred package-name)
+  "Retrieves all external symbols filtered by PRED from a package with PACKAGE-NAME."
+  (declare ((or package string symbol) package-name))
+  (the list
+       (let ((lst (list))
+             (package (find-package (string-upcase package-name))))
+         (cond (package
+                (do-external-symbols (symb package)
+                  (when (and (funcall pred symb)
+                             (eql (symbol-package symb) package))
+                    (push symb lst)))
+                lst)
+               (t
+                (error "~S does not designate a package" package-name))))))
 
 (defun all-packages ()
   (mapcar (compose #'string-downcase #'package-name) (list-all-packages)))
+;; original
 
 (defun aget (alist key)
   (cdr (assoc key alist :test 'equalp)))

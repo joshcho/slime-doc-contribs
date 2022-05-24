@@ -148,6 +148,49 @@
        (or package (cdr (assoc :package info))))
     (insert (slime-help--propertize-docstring (cdr (assoc :documentation info))))))
 
+;; additions by me
+
+(defvar slime-help-packages-to-search '("serapeum" "alexandria" "common-lisp" "stumpwm"))
+
+(defun slime-help-function-select-from-packages (package-name stripped-function-name)
+  (interactive
+   (let
+       ((package-name
+         (completing-read "Package: "
+                          (slime-eval
+                           `(swank-help:all-packages)))))
+     (list package-name
+           (completing-read "Function: "
+                            (mapcar
+                             (lambda (s)
+                               (string-remove-prefix (format "%s:" package-name)
+                                                     (symbol-name s)))
+                             (remove-duplicates
+                              (slime-eval
+                               `(swank-help:get-external-functions ,package-name))
+                              :test #'equal))))))
+  (slime-help-function
+   (format "%s:%s" package-name stripped-function-name)))
+(defun slime-help-function-select (function-name)
+  (interactive
+   (list (completing-read "Function: "
+                          (remove-duplicates
+                           (cl-loop for package in slime-help-packages-to-search
+                                    append (slime-eval
+                                            `(swank-help:get-external-functions ,package)))
+                           :test #'equal))))
+  (slime-help-function function-name))
+
+(defun slime-help-variable-select (variable-name)
+  (interactive
+   (list (completing-read "Variable: "
+                          (remove-duplicates
+                           (cl-loop for package in slime-help-packages-to-search
+                                    append (slime-eval
+                                            `(swank-help:get-external-variables ,package)))
+                           :test #'equal))))
+  (slime-help-variable variable-name))
+
 ;; copied from helpful.el library
 
 (defun slime-help--button (text type &rest properties)
@@ -604,7 +647,7 @@
         (insert (format "This is a VARIABLE in package "))
         (insert-button package-name
                        'action (lambda (btn)
-				 (ignore btn)
+				                 (ignore btn)
                                  (slime-help-package package-name))
                        'follow-link t
                        'help-echo "Describe package")
@@ -617,12 +660,13 @@
             (insert (slime-help--warning "The variable is UNBOUND"))
           (progn
             (insert (propertize "Value: " 'face 'bold))
+            (newline)
             (insert (slime-help--info (cdr (assoc :value symbol-info))))))
         (newline 2)
 
         (cl-flet ((goto-source (btn)
-			       (ignore btn)
-                               (slime-edit-definition-other-window (prin1-to-string (cdr (assoc :symbol symbol-info))))))
+			        (ignore btn)
+                    (slime-edit-definition-other-window (prin1-to-string (cdr (assoc :symbol symbol-info))))))
           (insert-button "Source"
                          'action (function goto-source)
                          'face 'slime-help-button
@@ -631,7 +675,7 @@
         (insert " ")
 
         (cl-flet ((browse-references (btn)
-                                     (slime-who-references (prin1-to-string (cdr (assoc :symbol symbol-info))))))
+                    (slime-who-references (prin1-to-string (cdr (assoc :symbol symbol-info))))))
           (insert-button "References"
                          'face 'slime-help-button
                          'action (function browse-references)
@@ -640,7 +684,7 @@
         (insert " ")
 
         (cl-flet ((browse-binders (btn)
-                                  (slime-who-binds (prin1-to-string (cdr (assoc :symbol symbol-info))))))
+                    (slime-who-binds (prin1-to-string (cdr (assoc :symbol symbol-info))))))
           (insert-button "Binders"
                          'face 'slime-help-button
                          'action (function browse-binders)
@@ -649,7 +693,7 @@
         (insert " ")
 
         (cl-flet ((browse-setters (btn)
-                                  (slime-who-sets (prin1-to-string (cdr (assoc :symbol symbol-info))))))
+                    (slime-who-sets (prin1-to-string (cdr (assoc :symbol symbol-info))))))
           (insert-button "Setters"
                          'face 'slime-help-button
                          'action (function browse-setters)
@@ -666,9 +710,9 @@
         (when (cl-member (cdr (assoc :package symbol-info))
                          '("COMMON-LISP" "CL") :test 'equalp)
           (cl-flet ((lookup-in-hyperspec (btn)
-					 (ignore btn)
-                                         (slime-hyperspec-lookup
-                                          (prin1-to-string (cdr (assoc :symbol symbol-info))))))
+					  (ignore btn)
+                      (slime-hyperspec-lookup
+                       (prin1-to-string (cdr (assoc :symbol symbol-info))))))
             (insert-button "Lookup in Hyperspec"
                            'face 'slime-help-button
                            'action (function lookup-in-hyperspec)
