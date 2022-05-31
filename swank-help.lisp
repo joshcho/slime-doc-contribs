@@ -2,7 +2,7 @@
          (pathname "/home/pollock/slime-doc-contribs/cl-def-properties/module.lisp"))
 
 (defpackage :swank-help
-  (:use :cl :alexandria)
+  (:use :cl :alexandria :def-properties)
   (:export
    :read-emacs-symbol-info
    :read-emacs-package-info
